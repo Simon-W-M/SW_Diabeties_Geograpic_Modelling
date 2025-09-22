@@ -18,6 +18,8 @@
 *.tax2010
 *.vcf
 *.xml
+*.rds
+*.Rhistory
 
 personal_creds.R
 
