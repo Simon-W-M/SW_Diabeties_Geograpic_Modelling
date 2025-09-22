@@ -1,12 +1,12 @@
-# {PROJECT NAME}
+# Geographic Modelling for Optical Diabeties Screening
 ## NHS England South West Intelligence and Insights
 
 ### About the Project
 
-{ADD EXPERIMENTAL STATUS BADGE IF PROJECT IS IN DEVELOPMENT}
+In development
 [![status: experimental](https://github.com/GIScience/badges/raw/master/status/experimental.svg)](https://github.com/GIScience/badges#experimental)
 
-This repository holds code for the {PROJECT NAME} {SHORT DESCRIPTION}
+This repository holds code for the Geographic Modelling for Optical Diabeties Screening  project.  This is a project to explore a modelled diabeties population and applies travel times to sites to explore coverage in SW ICBs. Further optimisaion is checked against proposed sites to determine possible optimal sites. 
 
 _**Note:** Only public or fake data are shared in this repository._
 
@@ -19,14 +19,23 @@ _**Note:** Only public or fake data are shared in this repository._
 
 ### Built With
 
-{LIST SOFTWARE USED TO CREATE PROJECT}
-
 [R Studio](http://www.rstudio.com/.)  
 [R Statistical Software](https://www.R-project.org/.)  
 [SQL SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16)  
-[!Python v3.8](https://www.python.org/downloads/release/python-380/)  
 
-- {LIST OF MAIN PACKAGE VERSIONS}
+Main packages utilsed
+library('tidyverse')     # data wrangling
+library('janitor')       # data tidying
+library('cli')           # for process messages
+library('leaflet')       # main mapping utility
+library('sf')            # sf (simple features) - handling spatial data
+library('readxl')        # read in excel sheet 
+library('curl')          # read data from web
+library('htmltools')     # additional leaflet tweaks
+library('tidygeocoder')  # converts postcodes to long / lat
+library('fontawesome')   # makes funky icons
+library('leaf.magic')    # makes pretty markers with icons
+library('gt')            # makes pretty tables
 
 
 ### Getting Started
@@ -37,9 +46,11 @@ To get a local copy up and running follow these simple steps.
 
 To clone the repo:
 
-`git clone https://github.com/nhsx/{REPO NAME}`
+`git clone https://github.com/Simon-W-M/SW_Diabeties_Geograpic_Modelling`
 
-{ADDITIONAL TECHNICAL SUPPORT AND NEEDS} 
+Additional datasets are drawn from web
+These are the LSOA shapefile and LSOA - ICB attribution file.
+
 
 ### Usage
 {DESCRIPTION OF CODE}
