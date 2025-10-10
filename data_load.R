@@ -92,11 +92,18 @@ SELECT [origin_name] ,
   [travel_time_pt_peak],
   [travel_time_pt_nonpeak]
     FROM [AGEM_TravelTime].[LSOA_to_LSOA] AS t
-  WHERE [destination_name] IN (", losa_sites ,")
+  WHERE [destination_name] IN (", lsoa_sites ,")
   AND travel_time_car < 250
 
 
 "))
+
+# check all LSOAs have come through in table
+# x <- unique(trav_dat$destination_name)
+# y <- unique(locations$lsoa_sites)
+# setdiff(x,y) # returns values in x not in y
+# setdiff(y,x) # returns values in y not in x
+# if both return 'character(0)' then you is good
 
 cli_alert_success('Downloading travel data from UDAL - complete')
 
@@ -180,7 +187,8 @@ cli_alert('Imputing missing populations')
 # if there are still NaNs after imputation
 # a default if 160 is added
 data <- data |>
-  mutate(local = substr(lsoa21nm, 1, nchar(lsoa21nm) - 1)) |>
+  mutate(local = substr(lsoa21nm, 1, nchar(lsoa21nm) - 1),
+         local_2 = substr(lsoa21nm, 1, nchar(lsoa21nm) - 2)) |>
   mutate(wt_pop = if_else(is.na(wt_pop), round(mean(wt_pop, na.rm=TRUE),0), wt_pop),
          .by = local) |>
   mutate(wt_pop = if_else(is.nan(wt_pop), 160, wt_pop),
@@ -203,12 +211,12 @@ data_t <- data_t |>
 data <- data |>
   filter(!is.na(destination_name)) |>
   left_join(locations,
-            by = c('destination_name' = 'losa_sites'))
+            by = c('destination_name' = 'lsoa_sites'))
 
 # stitch the two datasets back together
 # if we still have NaNs after imputation, we stick a default of 50 in
 data <- bind_rows(data, data_t) |>
-  mutate(losa_sites = if_else(is.na(destination_name), losa_sites, destination_name))
+  mutate(lsoa_sites = if_else(is.na(destination_name), lsoa_sites, destination_name))
 
 # impute a mean travel time by site and local area  
 data <- data |>
@@ -220,7 +228,17 @@ data <- data |>
                                    mean(travel_time_pt_peak, 
                                         na.rm=TRUE), 
                                    travel_time_pt_peak),
-         .by = c(local, losa_sites)) |>
+         .by = c(local, lsoa_sites)) |>
+  mutate(travel_time_car = if_else(is.na(travel_time_car), # added a second layer of imputation as still had spurious results
+                                   mean(travel_time_car, 
+                                        na.rm=TRUE), 
+                                   travel_time_car),
+         travel_time_pt_peak = if_else(is.na(travel_time_pt_peak), 
+                                       mean(travel_time_pt_peak, 
+                                            na.rm=TRUE), 
+                                       travel_time_pt_peak),
+         .by = c(local_2, lsoa_sites)) |>
+
   mutate(travel_time_car = if_else(is.nan(travel_time_car), 
                                    50, 
                                    travel_time_car),
@@ -235,13 +253,17 @@ cli_alert('Tidying dataframe')
 # tidy up names of columns
 data <- data |>
   select(origin_lsoa = lsoa21cd,
-         site_lsoa = losa_sites ,
+         site_lsoa = lsoa_sites ,
          wt_pop,
          travel_time_car,
          travel_time_pt_peak,
          travel_time_hybrid,
          icb = icb23nm,
          site,
+         site_short_name,
+         site_type,
+         site_status,
+         analysis,
          icb_site,
          geometry) |>
   mutate(icb_short = case_when(icb == "NHS Devon Integrated Care Board"  ~ 'Devon',
@@ -261,5 +283,9 @@ cli_alert_success('Data loaded and joined')
 
 
 #datal <- data |> filter(origin_lsoa == 'E01022116')
+
+# read xl with optimal site combos
+combos_table <- read_excel("LocationsForDES.xlsx", 
+                            sheet = "optimal_combos")
 
 
