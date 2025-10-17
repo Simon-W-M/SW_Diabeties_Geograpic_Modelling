@@ -1,0 +1,344 @@
+---
+title: "Diabetic Eye Screening: OCT Access Modelling Report"
+authors: "Destiny Bradley & Simon Wellesley-Miller"
+date: "`r Sys.Date()`"
+date-format: "D MMMM YYYY"
+format:
+  html:
+    # Table of Contents options
+    toc: false
+    toc-depth: 3
+    toc-location: left
+    toc-title: Contents
+    number-sections: false
+    number-depth: 4
+    # Render options
+    anchor-sections: false
+    html-table-processing: none
+    html-math-method: katex
+    # Code options
+    code-tools:
+      source: false
+      toggle: false
+      caption: none
+    # code-fold: false
+    # code-summary: "Show code"
+    embed-resources: true
+    standalone: true
+    # URL options
+    link-external-icon: true
+    link-external-newwindow: true
+    # References
+    citations-hover: true
+    footnotes-hover: true
+    callout-appearance: simple
+    callout-collapse: true
+    cap-location: bottom
+    title-block-banner: '#005EB8'
+    backgroundcolor: '#ffffff'
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+---
+
+::: {.column-screen-inset}
+
+```{r}
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+icb <- readRDS('icb_it.rds')
+no_scen <- readRDS('no_scen.rds')
+
+```
+
+# `r icb`
+
+# Introduction
+
+The Diabetic Eye Screening (DES) programme is undergoing significant transformation with the integration of Optical Coherence Tomography (OCT) into the Digital Surveillance (DS) pathway. This will typically result in far fewer screening venues being available for patients in the DS pathway.  To meet the definition of full implementation commissioners must ensure that access to OCT is at least as accessible as the hospital eye services (HES) sites patients would potentially otherwise be referred to.  Commissioners and providers will also need to ensure equitable access, service efficiency, and patient-centred delivery in line with the national service specification.
+This report has been developed to provide both the **rationale** and the **technical methodology** that underpin modelling work to support this implementation. It aims to inform providers, commissioners, and system partners on how sites can be optimally located to maximise coverage and minimise travel burden, while also enabling consistent interpretation of national requirements in local contexts.
+
+# Rationale
+
+- Equitable access: A core principle is that patients should not be required to travel significantly further for DS with OCT than for hospital eye services (HES). However, concerns remain about variation in journey times, particularly for rural or underserved populations.  Part of this work is therefore also looking to establish the impact that adding on, two or three additional locations may have for a provider and what the best location may be to for these to be located.
+- Health equity and service improvement: DS with OCT is a new pathway; therefore, uptake, coverage, and patient experience must be actively monitored and used to refine service models, ensuring capacity and responsiveness.
+- Reducing barriers to care: Research highlights travel challenges in accessing NHS services, especially for rural residents, patients requiring support, and people experiencing digital exclusion. Ensuring that travel times are minimised supports both equity and uptake.
+
+# Results
+
+## Interactive map
+- Initial population in blue shows heatmap of calculated diabetic population
+- Base - Shows Current state of sites
+- Scenario 1 - shows best additional site, based on candiate sites provided
+- Scenario 2 - shows best combination of 2 additional sites, based on candiate sites provided
+- Scenario 3 - shows best combination of 3 additional sites, based on candiate sites provided
+
+```{r}
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+library(leaflet)
+library(gt)
+library(gtExtras)
+
+
+map <-readRDS('oct_map.rds')
+
+map
+
+```
+
+
+
+# Baseline and Scenario Results 
+
+::: {.panel-tabset .nav-pills}
+
+
+```{r}
+#| results: asis
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+cat('## Baseline Table \n\n')
+cat('*Showing Current OCT Sites* \n\n')
+
+base <-readRDS('base_table.rds')
+base
+ 
+```
+
+
+```{r}
+#| results: asis
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+if (no_scen > 0) {
+  cat('## Scenario 1    \n\n')
+  cat('*Showing 1 additional site*    \n\n')
+  
+scen_1 <-readRDS('scenario_table1.rds')
+scen_1
+} 
+ 
+```
+
+
+```{r}
+#| results: asis
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+if (no_scen > 1) {
+  cat('## Scenario 2    \n\n')
+  cat('*Showing 2 additional sites*    \n\n')
+  
+scen_2 <-readRDS('scenario_table2.rds')
+scen_2
+} 
+
+```
+
+
+```{r}
+#| results: asis
+#| echo: false
+#| warning: false
+#| fig-width: 10
+#| fig-height: 12
+
+if (no_scen > 2) {
+  cat('## Scenario 3    \n\n')
+  cat('*Showing 3 additional sites*    \n\n')
+  
+scen_3 <-readRDS('scenario_table3.rds')
+scen_3
+} 
+
+ 
+```
+
+
+
+
+:::
+
+::: {.callout-note collapse="true"}
+### Click to see methodology
+
+The modelling approach has two interlinked components:
+1.	Estimating the diabetic population at local levels.
+2.	Calculating travel times and optimising site configurations.
+
+#### 1. Data Sources
+**•	Diabetes prevalence model**  
+
+-	Public Health Diabetes Prevalence Model (2016) provided baseline prevalence estimates (diagnosed and undiagnosed, age 16+).  
+- 	National prevalence in 2015 was 3.8% and modelled to reach 4.4% by 2025, and this was used to inform uplift calculations.  
+
+•	Population estimates  
+
+- 	Age-specific resident populations for each Lower Super Output Area (LSOA) were sourced from the UKHF Demography dataset, drawn from ONS population estimates by year of age and held in the UDAL warehouse.  
+
+-	Populations were grouped into the same age bands used by Public Health England (0–15, 16–24, 25–34, … 65–74, 75+).  
+
+•	Travel times  
+
+-	AGEM LSOA-to-LSOA travel timetables were used to calculate journey times.  
+
+-	Travel times were modelled for both car and public transport and combined into a hybrid measure to reflect real-world transport usage.  
+
+-	Geographic references  
+
+-	ICB boundary mapping was obtained via the Open Geography Portal, linking LSOAs to ICB areas.  
+
+-	Mapping overlays were created using ArcGIS shapefiles and OpenStreetMap data.  
+
+
+**2. Constructing the Diabetic Population**  
+
+•	Population × prevalence weighting  
+
+-	LSOA populations were multiplied by age-specific prevalence rates.  
+
+![](picture1.png)
+
+•	Uplift for prevalence growth  
+
+-	Adjustments were made to reflect the expected increase in diabetes prevalence nationally between 2015 (3.8%) and 2025 (4.4%).  
+
+![](picture2.png)
+
+•	Proxy diabetic population  
+
+-	The outcome was a “modelled diabetic population,” serving as a proxy for screening demand at LSOA level.  
+
+•	Handling missing data  
+
+-	Missing values were imputed, defined by truncating the final character of the LSOA name.  
+
+-	Where gaps remained, default regional averages were applied.  
+
+
+**3. Travel Time Modelling**  
+
+•	Baseline calculation  
+
+-	Travel times from each LSOA to existing screening sites were mapped using Arden & GEM tables.  
+
+•	Hybrid approach  
+
+-	Car and public transport journey times were weighted and averaged based on the proportion of patients with long-term conditions who reported their mode of travel to outpatient appointments in the Healthwatch survey (74% by car, 26% by public transport), providing a realistic estimate of accessibility.  
+
+![](picture3.png)
+
+•	Travel bands  
+
+-	Patients were grouped into 0–15, 15–30, 30–45, 45–60, and 60+ minute bands.  
+
+•	Outputs  
+
+-	Mean travel times per LSOA.  
+
+-	Proportion of the diabetic population within each band.  
+
+-	Cumulative distributions visualised as stacked column charts for each ICB.  
+
+
+**4. Site Optimisation Methodology**  
+
+Baseline analysis: Existing fixed sites were mapped against population prevalence and travel times.  
+
+Scenario modelling:  
+
+•	Up to three potential new sites were tested per ICB (with exceptions, e.g. Somerset where provision is already adequate).  
+
+•	Optimisation criteria:  
+
+-	Maximise coverage within 0–30 and 0–45 minutes.  
+
+-	Reduce the proportion travelling over 60 minutes.  
+
+-	Minimise geographical inequalities.  
+
+•	Impact assessment:  
+
+-	Before-and-after comparisons highlighted improvements in mean travel times and population coverage.  
+
+
+**5. Outputs for Commissioners and Providers**  
+
+•	Interactive maps showing prevalence, travel times, and site locations.  
+
+•	Tabular summaries of mean travel times and population coverage by travel band, at LSOA and ICB level.  
+
+
+**6. Implementation Considerations**  
+
+•	Equity benchmark: Access to DS with OCT must be equitable compared to HES.  
+
+•	Monitoring: Uptake, coverage, and patient experience should be continuously evaluated to inform service improvement.  
+
+
+**7. Caveat: Use of Potential GP and Medical Practice Locations**  
+
+In some ICBs, particularly BNSSG and Cornwall, potential sites for diabetic eye screening with OCT have been modelled using existing medical practice locations (e.g. GP surgeries) as candidate sites.  
+
+It is important to note:  
+
+•	The modelling exercise does not imply any engagement with the individual medical practices included as candidate locations.  
+
+•	Inclusion of a GP or other medical facility is illustrative only, serving as a proxy for local accessibility.  
+
+•	Final siting decisions will require direct engagement with providers, capacity reviews, and commissioning processes.  
+
+•	Where limited venue options exist, GP sites may be used as placeholders in the model, but outputs should be treated as indicative planning tools rather than commitments.  
+
+•	Where the closest site has been chosen it is assumed that the site has capacity to see those patients.
+
+
+:::
+
+::: {.callout-note collapse="true"}
+### Click to see data source links
+
+Microsoft Word - 20191002 People's experiences of patient transport Formatted final.docx  
+
+Defining Full Implementation of OCT - Vaccinations and Screening - Futures PHE standard publication template. 
+
+A full list of all their routine screening locations can be found here - Contact and Locations - InHealth Group   
+
+Diabetes - Data | Fingertips | Department of Health and Social Care  
+
+:::
+
+# Recommendations
+
+This model describes discrepancies between the current geographical configuration of service sites and established HES sites as a benchmark for population access. The primary objective of the optimisation algorithm is to maximise accessibility for the largest demographic cohort based on the candidate sites provided. This may result in geospatial outliers within sparsely populated rural areas. Caution is warranted in the map interpretation , as the eye is easily drawn to registering large red areas, which may inaccurately suggest a widespread disparity. It is crucial to note that each Lower Super Output Area (LSOA) maintains a broadly consistent population density. Therefore, it is recommended that the geospatial mapping be interpreted concurrently with the tabular data to provide an objective assessment of the marginal impact of incorporating supplementary sites on improving regional access metrics.
+
+The table should be compared at the bottom lines to determine what is a suitable level of access is based on the scenarios.  There are diminsihing returns based on the number of additional sites and so it is recommended a wider holistic approach taking into account features not included in this analysis, is explored in decision making around potential commissioning of additional sites. 
+
+
+> Contact  
+> [**Destiny Bradley**](mailto:destiny.bradley@nhs.net)\
+> [**Simon Wellesley-Miller**](mailto:Simon.Wellesley-Miller@nhs.net)\
+>   
+> South West Intelligence and Insights
+> NHS England  
+> *Version 1.1*  
+> *16 October 2025*
+
+:::

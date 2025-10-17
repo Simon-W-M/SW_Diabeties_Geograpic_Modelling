@@ -105,7 +105,7 @@ create_data_icb <- function(oct_or_hes = "OCT",
       time_band_n_h = case_when(min_hybrid_trav <= 15 ~ 1,
         min_hybrid_trav <= 30 ~ 2,
         min_hybrid_trav <= 45 ~ 3,
-        min_hybrid_trav <= 60 ~ 4,
+        min_hybrid_trav <= 60 ~ 5,
         min_hybrid_trav > 60 ~ 5,
         .default = 6
       ),
@@ -132,7 +132,7 @@ create_data_icb <- function(oct_or_hes = "OCT",
 
 test_data_hes <- create_data_icb(oct_or_hes = 'HES', 'Cornwall', 0,0)
 
-test_data<-  create_data_icb(oct_or_hes = 'OCT', 'Cornwall', 2, 2 )
+test_data<-  create_data_icb(oct_or_hes = 'OCT', 'Cornwall', 0, 0 )
 
 cli_alert_success('Calculating optimal site - complete')
 
@@ -250,6 +250,14 @@ create_summary_site_icb <- function(data_sum, site_or_icb = "site") {
   summary_site
 }
 
+all_sites_icons <- all_sites |>
+  mutate(site_icon = if_else(hospital_flag == 1, 'hospital', 'house-medical'),
+         icon_colour = if_else(site_status == 'Exisiting', '#38aadd', '#72b026'))
+
+all_sites_icons |> gt() |>
+  fmt_icon(columns = site_icon,
+           fill_color = from_column('icon_colour'))
+
 
 
 
@@ -299,7 +307,11 @@ create_table_dataframe <- function(icb_filt, number_sites, scenario) {
     icb_summary,
     hes_summary
   ) |>
+  left_join(all_sites_icons,
+            by = 'site') |>
     select(
+      site_icon,
+      icon_colour,
       site,
       tot_pop_site,
       mean_trav,
@@ -323,208 +335,357 @@ create_table_dataframe <- function(icb_filt, number_sites, scenario) {
       `tot_pop_band_30+ - 45`,
       `tot_pop_band_45+ - 60`,
       `tot_pop_band_60 +`
-    )
+    ) |>
+    distinct() |>
+    arrange(icon_colour)
 
   combined
 }
 
-
-a<-create_table_dataframe('Cornwall', 2, 2) 
-
-
-
-
+# test data
+#a<-create_table_dataframe('Cornwall', 3, 1) 
 
 
 create_summary_table <- function(data) {
-
-  wd <-80  
   
-  
-data |>
-  gt() |>
-  fmt_number(
-    columns = everything(),
-    use_seps = TRUE, decimals = 1
-  ) |>
-  gt_duplicate_column(`culm_per_0 - 15`,
-                      after = `culm_per_0 - 15`,
-                      append_text = "bar"
-  ) |>
-  gt_plt_bar_pct(
-    column = `culm_per_0 - 15bar`,
-    scaled = TRUE,
-    fill = "#005EB8",
-    background = "lightblue",
-    width = wd
-  ) |>
-  gt_duplicate_column(`culm_per_15+ - 30`,
-                      after = `culm_per_15+ - 30`,
-                      append_text = "bar"
-  ) |>
-  gt_plt_bar_pct(
-    column = `culm_per_15+ - 30bar`,
-    scaled = TRUE,
-    fill = "#005EB8",
-    background = "lightblue",
-    width = wd
-  ) |>
-  gt_duplicate_column(`culm_per_30+ - 45`,
-                      after = `culm_per_30+ - 45`,
-                      append_text = "bar"
-  ) |>
-  gt_plt_bar_pct(
-    column = `culm_per_30+ - 45bar`,
-    scaled = TRUE,
-    fill = "#005EB8",
-    background = "lightblue",
-    width = wd
-  ) |>
-  gt_duplicate_column(`culm_per_45+ - 60`,
-                      after = `culm_per_45+ - 60`,
-                      append_text = "bar"
-  ) |>
-  gt_plt_bar_pct(
-    column = `culm_per_45+ - 60bar`,
-    scaled = TRUE,
-    fill = "#005EB8",
-    background = "lightblue",
-    width = wd
-  ) |>
-  gt_duplicate_column(`culm_per_60 +`,
-                      after = `culm_per_60 +`,
-                      append_text = "bar"
-  ) |>
-  gt_plt_bar_pct(
-    column = `culm_per_60 +bar`,
-    scaled = TRUE,
-    fill = "#005EB8",
-    background = "lightblue",
-    width = wd
-  ) |>
-  sub_missing(missing_text = "-") |>
-  cols_merge(
-    columns = c(
-      `culative_pop_0 - 15`,
-      `culm_per_0 - 15`
-    ),
-    pattern = "{1} ({2}%)"
-  ) |>
-  cols_merge(
-    columns = c(
-      `culative_pop_15+ - 30`,
-      `culm_per_15+ - 30`
-    ),
-    pattern = "{1} ({2}%)"
-  ) |>
-  cols_merge(
-    columns = c(
-      `culative_pop_30+ - 45`,
-      `culm_per_30+ - 45`
-    ),
-    pattern = "{1} ({2}%)"
-  ) |>
-  cols_merge(
-    columns = c(
-      `culative_pop_45+ - 60`,
-      `culm_per_45+ - 60`
-    ),
-    pattern = "{1} ({2}%)"
-  ) |>
-  cols_merge(
-    columns = c(
-      `culative_pop_60 +`,
-      `culm_per_60 +`
-    ),
-    pattern = "{1} ({2}%)"
-  ) |>
-  cols_merge(
-    columns = c(
-      `tot_pop_band_0 - 15`,
-      `mean_trav_band_0 - 15`
-    ),
-    pattern = "{1} ({2} mins)") |>
-  cols_merge(
-    columns = c(
-      `tot_pop_band_15+ - 30`,
-      `mean_trav_band_15+ - 30`
-    ),
-    pattern = "{1} ({2} mins)")|>
-  cols_merge(
-    columns = c(
-      `tot_pop_band_30+ - 45`,
-      `mean_trav_band_30+ - 45`
-    ),
-    pattern = "{1} ({2} mins)")|>
-  cols_merge(
-    columns = c(
-      `tot_pop_band_45+ - 60`,
-      `mean_trav_band_45+ - 60`
-    ),
-    pattern = "{1} ({2} mins)")|>
-  cols_merge(
-    columns = c(
-      `tot_pop_band_60 +`,
-      `mean_trav_band_60 +`
-    ),
-    pattern = "{1} ({2} mins)") |>
-  tab_spanner(label = "Total Site", 
-              columns = c(
-    mean_trav,
-    tot_pop_site
-  )) |>
-  cols_move(columns = `culm_per_0 - 15bar`,
-            after = `culative_pop_0 - 15`) |>
-  cols_move(columns = `culm_per_15+ - 30bar`,
-            after = `culative_pop_15+ - 30`) |>
-  cols_move(columns = `culm_per_30+ - 45bar`,
-            after = `culative_pop_30+ - 45`)|>
-  cols_move(columns = `culm_per_45+ - 60bar`,
-            after = `culative_pop_45+ - 60`)|>
-  cols_move(columns = `culm_per_60 +bar`,
-            after = `culative_pop_60 +`) |>
-  cols_label(
-    mean_trav = "Mean Travel Time (Mins)",
-    tot_pop_site = "Diabetes Population",
-    `culative_pop_0 - 15` = "0 - 15",
-    `culm_per_0 - 15bar` = "",
-    `culative_pop_15+ - 30` = "15+ - 30",
-    `culm_per_15+ - 30bar` = "",
-    `culative_pop_30+ - 45` = "30+ - 45",
-    `culm_per_30+ - 45bar` = "",
-    `culative_pop_45+ - 60` = "45+ - 60",
-    `culm_per_45+ - 60bar` = "",
-    `culative_pop_60 +` = "60+",
-    `culm_per_60 +` = "",
-    `culm_per_60 +bar` = "",
-    `tot_pop_band_0 - 15` = "0 - 15",
-    `tot_pop_band_15+ - 30` = "15+ - 30",
-    `tot_pop_band_30+ - 45` = "30+ - 45",
-    `tot_pop_band_45+ - 60` = "45+ - 60",
-    `tot_pop_band_60 +` = "60+"
-  )  |>
-  tab_spanner(label = "Cumlative Population Served by Travel Band (%)", 
-                 columns = c(
-                   `culative_pop_0 - 15`,
-                   `culm_per_0 - 15bar`,
-                   `culative_pop_15+ - 30`,
-                   `culm_per_15+ - 30bar` ,
-                   `culative_pop_30+ - 45`,
-                   `culm_per_30+ - 45bar`,
-                   `culative_pop_45+ - 60`,
-                   `culm_per_45+ - 60bar`,
-                   `culative_pop_60 +`,
-                   `culm_per_60 +` 
-                   )) |>
-  tab_spanner(label = "Population by Time Band (Mean Travel Time)", 
-              columns = c(
-                `tot_pop_band_0 - 15`,
-                `tot_pop_band_15+ - 30`,
-                `tot_pop_band_30+ - 45`,
-                `tot_pop_band_45+ - 60` ,
-                `tot_pop_band_60 +`
-              )) 
+  # set width of columns
+  wd <- 80
 
+  # work out number of additional sites
+  number_sites <- sum(data$icon_colour == "#72b026", na.rm = TRUE)
+
+  # create dynamic chart title
+  cht_title <- if_else(number_sites == 0,
+    "Table showing base level scenario with no additional sites.",
+    paste0(
+      "Table showing impact of ", number_sites, " additional ",
+      if_else(number_sites == 1, "site", "sites"),
+      " based on optimal placement of candidate sites"
+    )
+  )
+
+  # create the table
+  data |>
+    gt() |>
+    # covert icon names to pictures
+    fmt_icon(
+      columns = site_icon,
+      fill_color = from_column("icon_colour"),
+      height = "3em"
+    ) |>
+    # format numbers 
+    fmt_number(
+      columns = everything(),
+      use_seps = TRUE, decimals = 0
+    ) |>
+    # duplicate column in order to turn it into bar chart
+    gt_duplicate_column(`culm_per_0 - 15`,
+      after = `culm_per_0 - 15`,
+      append_text = "bar"
+    ) |>
+    # make bar chart of duplicat column
+    gt_plt_bar_pct(
+      column = `culm_per_0 - 15bar`,
+      scaled = TRUE,
+      fill = "#005EB8",
+      background = "lightblue",
+      width = wd
+    ) |>
+    gt_duplicate_column(`culm_per_15+ - 30`,
+      after = `culm_per_15+ - 30`,
+      append_text = "bar"
+    ) |>
+    gt_plt_bar_pct(
+      column = `culm_per_15+ - 30bar`,
+      scaled = TRUE,
+      fill = "#005EB8",
+      background = "lightblue",
+      width = wd
+    ) |>
+    gt_duplicate_column(`culm_per_30+ - 45`,
+      after = `culm_per_30+ - 45`,
+      append_text = "bar"
+    ) |>
+    gt_plt_bar_pct(
+      column = `culm_per_30+ - 45bar`,
+      scaled = TRUE,
+      fill = "#005EB8",
+      background = "lightblue",
+      width = wd
+    ) |>
+    gt_duplicate_column(`culm_per_45+ - 60`,
+      after = `culm_per_45+ - 60`,
+      append_text = "bar"
+    ) |>
+    gt_plt_bar_pct(
+      column = `culm_per_45+ - 60bar`,
+      scaled = TRUE,
+      fill = "#005EB8",
+      background = "lightblue",
+      width = wd
+    ) |>
+    gt_duplicate_column(`culm_per_60 +`,
+      after = `culm_per_60 +`,
+      append_text = "bar"
+    ) |>
+    gt_plt_bar_pct(
+      column = `culm_per_60 +bar`,
+      scaled = TRUE,
+      fill = "#005EB8",
+      background = "lightblue",
+      width = wd
+    ) |>
+    # change colour and weight of column headings
+    tab_style(
+      style = list(
+        cell_fill(color = "#FFFFB2"),
+        cell_text(color = "black", 
+                  weight = "bold")
+      ),
+      locations = cells_column_labels(columns = c(`culative_pop_0 - 15`, 
+                                                  `culm_per_0 - 15bar`))
+    ) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#FECC5C"),
+        cell_text(color = "black", 
+                  weight = "bold")
+      ),
+      locations = cells_column_labels(columns = c(`culative_pop_15+ - 30`, `culm_per_15+ - 30bar`))
+    ) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#FD8D3C"),
+        cell_text(color = "black", 
+                  weight = "bold")
+      ),
+      locations = cells_column_labels(columns = c(`culative_pop_30+ - 45`, 
+                                                  `culm_per_30+ - 45bar`))
+    ) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#BD0026"),
+        cell_text(color = "white", 
+                  weight = "bold")
+      ),
+      locations = cells_column_labels(columns = c(`culative_pop_45+ - 60`, 
+                                                  `culm_per_45+ - 60bar`))
+    ) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#BD0026"),
+        cell_text(color = "white", 
+                  weight = "bold")
+      ),
+      locations = cells_column_labels(columns = c(`culative_pop_60 +`, 
+                                                  `culm_per_60 +bar`))
+    ) |>
+    # replace any pure NAs with '-'
+    sub_missing(missing_text = "-") |>
+    # merge text in columns to give - number (percentage)
+    cols_merge(
+      columns = c(
+        `culative_pop_0 - 15`,
+        `culm_per_0 - 15`
+      ),
+      pattern = "{1} ({2}%)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `culative_pop_15+ - 30`,
+        `culm_per_15+ - 30`
+      ),
+      pattern = "{1} ({2}%)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `culative_pop_30+ - 45`,
+        `culm_per_30+ - 45`
+      ),
+      pattern = "{1} ({2}%)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `culative_pop_45+ - 60`,
+        `culm_per_45+ - 60`
+      ),
+      pattern = "{1} ({2}%)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `culative_pop_60 +`,
+        `culm_per_60 +`
+      ),
+      pattern = "{1} ({2}%)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `tot_pop_band_0 - 15`,
+        `mean_trav_band_0 - 15`
+      ),
+      pattern = "{1} ({2} mins)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `tot_pop_band_15+ - 30`,
+        `mean_trav_band_15+ - 30`
+      ),
+      pattern = "{1} ({2} mins)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `tot_pop_band_30+ - 45`,
+        `mean_trav_band_30+ - 45`
+      ),
+      pattern = "{1} ({2} mins)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `tot_pop_band_45+ - 60`,
+        `mean_trav_band_45+ - 60`
+      ),
+      pattern = "{1} ({2} mins)"
+    ) |>
+    cols_merge(
+      columns = c(
+        `tot_pop_band_60 +`,
+        `mean_trav_band_60 +`
+      ),
+      pattern = "{1} ({2} mins)"
+    ) |>
+    # create header spanners across columns
+    tab_spanner(
+      label = "Total Site",
+      columns = c(
+        mean_trav,
+        tot_pop_site
+      )
+    ) |>
+    # rearrange some columns
+    cols_move(
+      columns = `culm_per_0 - 15bar`,
+      after = `culative_pop_0 - 15`
+    ) |>
+    cols_move(
+      columns = `culm_per_15+ - 30bar`,
+      after = `culative_pop_15+ - 30`
+    ) |>
+    cols_move(
+      columns = `culm_per_30+ - 45bar`,
+      after = `culative_pop_30+ - 45`
+    ) |>
+    cols_move(
+      columns = `culm_per_45+ - 60bar`,
+      after = `culative_pop_45+ - 60`
+    ) |>
+    cols_move(
+      columns = `culm_per_60 +bar`,
+      after = `culative_pop_60 +`
+    ) |>
+    # hide the colour column
+    cols_hide(columns = "icon_colour") |>
+    # rename the columns to readable
+    cols_label(
+      site_icon = "",
+      mean_trav = "Mean Travel Time (Mins)",
+      tot_pop_site = "Diabetes Population",
+      `culative_pop_0 - 15` = "Within 15 mins",
+      `culm_per_0 - 15bar` = "",
+      `culative_pop_15+ - 30` = "Within 30 mins (inclusive)",
+      `culm_per_15+ - 30bar` = "",
+      `culative_pop_30+ - 45` = "Within 45 mins (inclusive)",
+      `culm_per_30+ - 45bar` = "",
+      `culative_pop_45+ - 60` = "Within 60 mins (inclusive)",
+      `culm_per_45+ - 60bar` = "",
+      `culative_pop_60 +` = "All population (inclusive)",
+      `culm_per_60 +` = "",
+      `culm_per_60 +bar` = "",
+      `tot_pop_band_0 - 15` = "0 - 15",
+      `tot_pop_band_15+ - 30` = "15+ - 30",
+      `tot_pop_band_30+ - 45` = "30+ - 45",
+      `tot_pop_band_45+ - 60` = "45+ - 60",
+      `tot_pop_band_60 +` = "60+"
+    ) |>
+    # add column spanner
+    tab_spanner(
+      label = "Cumlative Population Served by Travel Band (%)",
+      columns = c(
+        `culative_pop_0 - 15`,
+        `culm_per_0 - 15bar`,
+        `culative_pop_15+ - 30`,
+        `culm_per_15+ - 30bar`,
+        `culative_pop_30+ - 45`,
+        `culm_per_30+ - 45bar`,
+        `culative_pop_45+ - 60`,
+        `culm_per_45+ - 60bar`,
+        `culative_pop_60 +`,
+        `culm_per_60 +`,
+        `culm_per_60 +bar`
+      )
+    ) |>
+    tab_spanner(
+      label = "Population by Time Band (Mean Travel Time)",
+      columns = c(
+        `tot_pop_band_0 - 15`,
+        `tot_pop_band_15+ - 30`,
+        `tot_pop_band_30+ - 45`,
+        `tot_pop_band_45+ - 60`,
+        `tot_pop_band_60 +`
+      )
+    ) |>
+    # adding line between areas
+    tab_style(
+      style = cell_borders(
+        sides = "right",
+        color = "black",
+        style = "double",
+        weight = px(2)
+      ),
+      locations = cells_body(columns = c(
+        `culm_per_60 +bar`,
+        tot_pop_site
+      ))
+    ) |>
+    # colour the icb total column
+    tab_style(
+      style = list(cell_fill(color = "#B0E0E6")),
+      locations = cells_body(rows = nrow(data) - 1)
+    ) |>
+    # colour the HES total column
+    tab_style(
+      style = list(cell_fill(color = "#E8EDEE")),
+      locations = cells_body(rows = nrow(data))
+    ) |>
+    # add source note
+    tab_source_note(source_note = "Blue icons denote existing sites - Green potential sites  /  Hospital Sites are denoted by larger Hospital Icon") |>
+    # add title and subtitle
+    tab_header(
+      title = cht_title,
+      subtitle = "Benchmark against HES sites shown in grey"
+    )
 }
 
-create_summary_table(a)
+# create_summary_table(a)
+
+
+cli_alert("Running geocoder on site locations")
+
+# use geocoder to get long lats from postcodes
+sites <- locations |>
+  mutate(geo(
+    address = postcode,
+    method = "osm"
+  )) |>
+  mutate(
+    hospital_flag = if_else(str_detect(site, "Hospital"), 1, 0),
+    site = site_short_name
+  ) |>
+  left_join(combos_table)
+
+cli_alert_success('Running geocoder on site locations - complete')
+
+# load in potential sites
+
+
+
+

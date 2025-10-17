@@ -188,7 +188,8 @@ cli_alert('Imputing missing populations')
 # a default if 160 is added
 data <- data |>
   mutate(local = substr(lsoa21nm, 1, nchar(lsoa21nm) - 1),
-         local_2 = substr(lsoa21nm, 1, nchar(lsoa21nm) - 2)) |>
+         local_2 = substr(lsoa21nm, 1, nchar(lsoa21nm) - 2),
+         local_3 = substr(lsoa21nm, 1, nchar(lsoa21nm) - 6)) |>
   mutate(wt_pop = if_else(is.na(wt_pop), round(mean(wt_pop, na.rm=TRUE),0), wt_pop),
          .by = local) |>
   mutate(wt_pop = if_else(is.nan(wt_pop), 160, wt_pop),
@@ -238,6 +239,15 @@ data <- data |>
                                             na.rm=TRUE), 
                                        travel_time_pt_peak),
          .by = c(local_2, lsoa_sites)) |>
+  mutate(travel_time_car = if_else(is.na(travel_time_car), # added a third layer of imputation as still had spurious results
+                                   mean(travel_time_car, 
+                                        na.rm=TRUE), 
+                                   travel_time_car),
+         travel_time_pt_peak = if_else(is.na(travel_time_pt_peak), 
+                                       mean(travel_time_pt_peak, 
+                                            na.rm=TRUE), 
+                                       travel_time_pt_peak),
+         .by = c(local_3, lsoa_sites)) |>
 
   mutate(travel_time_car = if_else(is.nan(travel_time_car), 
                                    50, 
@@ -245,7 +255,8 @@ data <- data |>
          travel_time_pt_peak = if_else(is.nan(travel_time_pt_peak), 
                                    999, 
                                    travel_time_pt_peak)) |>
-  mutate(travel_time_hybrid = ((travel_time_car * 74) + (travel_time_pt_peak * 26)) / 100)
+  mutate(travel_time_hybrid = ((travel_time_car * 74) + (travel_time_pt_peak * 26)) / 100) |>
+  filter(!lsoa21cd == 'E01019077') # remove that pesky isle of scilly!
   
 
 cli_alert('Tidying dataframe')
@@ -254,6 +265,7 @@ cli_alert('Tidying dataframe')
 data <- data |>
   select(origin_lsoa = lsoa21cd,
          site_lsoa = lsoa_sites ,
+         lsoa_nm =lsoa21nm,
          wt_pop,
          travel_time_car,
          travel_time_pt_peak,
@@ -286,6 +298,15 @@ cli_alert_success('Data loaded and joined')
 
 # read xl with optimal site combos
 combos_table <- read_excel("LocationsForDES.xlsx", 
-                            sheet = "optimal_combos")
+                            sheet = "optimal_combos") |>
+  filter(combo == 1)
 
 
+all_sites <- read_excel("LocationsForDES.xlsx", 
+                        sheet = "OCT Sites (ALL)" ) |>
+  mutate(geo(address = postcode, 
+             method = 'osm')) |>
+  mutate(hospital_flag = if_else(str_detect(site, 'Hospital'),1 ,0),
+         site = site_short_name) 
+
+all_sites <-  clean_names(all_sites)

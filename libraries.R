@@ -14,6 +14,7 @@ library('leaf.magic')    # makes pretty markers with icons
 library('gt')            # makes pretty tables
 library('gtExtras')      # makes extra pretty tables
 library('combinat')      # library to calculate permutations
+library('quarto')        # library to run quarto report
 
 # leaf.magic will need to be installed via
 
